@@ -35,9 +35,9 @@
 ```bash
 curl -X GET http://localhost:3000/users
 
-**Test account info:**
+>Test account info:
 Account: alice123@gmail.com
 Password: ABC123456
 
-**The login info will be saved in session storage**
+>The login info will be saved in session storage
 To try a new login, open the inspect window —> go to Application —> SessionStorage —> clear all login records —> refresh the website
