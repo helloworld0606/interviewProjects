@@ -3,6 +3,7 @@
 ## Environment Requirements
 - Node.js v20.11.1
 - npm v10.5.0
+- Windows 10
 
 ## Installation Instructions
 
