@@ -29,15 +29,18 @@
     npm run serve
     ```
 
-## The app will run at [http://localhost:8080/]
+5. **The app will run at [http://localhost:8080/](http://localhost:8080/)**
 
-### Get account info in `db.json`
+## Get account info in db.json
 ```bash
 curl -X GET http://localhost:3000/users
+```
 
->Test account info:
+**Test account:**
+```
 Account: alice123@gmail.com
 Password: ABC123456
+```
 
->The login info will be saved in session storage
-To try a new login, open the inspect window —> go to Application —> SessionStorage —> clear all login records —> refresh the website
+- The login info will be saved in session storage
+- To try a new login, open the inspect window —> go to Application —> SessionStorage —> clear all login records —> refresh the website
