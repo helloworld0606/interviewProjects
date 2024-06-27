@@ -25,7 +25,7 @@
 
 4. **Run the frontend server** (open another cmd)
     ```bash
-    cd ../frontend
+    cd frontend
     npm run serve
     ```
 
