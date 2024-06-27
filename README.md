@@ -31,12 +31,25 @@
 
 5. **The app will run at [http://localhost:8080/](http://localhost:8080/)**
 
-## Get account info in db.json
+
+
+## Account info in db.json
+(make sure backend is running)
+
+Get account
 ```bash
 curl -X GET http://localhost:3000/users
 ```
+Add account
+```
+curl -X POST "http://localhost:3000/users" -H "Content-Type: application/json" -d "{\"id\": 2, \"name\": \"James\", \"account\": \"james123@gmail.com\", \"password\": \"DEF789\"}"
+```
+Login account
+```
+curl -X POST "http://localhost:3000/users/login" -H "Content-Type: application/json" -d "{\"account\": \"james123@gmail.com\", \"password\": \"DEF789\"}"
+```
 
-**Test account:**
+## Test account:
 ```
 Account: alice123@gmail.com
 Password: ABC123456
