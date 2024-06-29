@@ -16,6 +16,8 @@
     ```bash
     cd interviewProjects/backend
     npm install
+    npm audit  # find security vulnerabilities
+    npm audit fix  # fix any security vulnerabilities
     node server.js
     ```
 
@@ -23,8 +25,9 @@
     ```bash
     cd interviewProjects/frontend
     npm install
+    npm audit  # find security vulnerabilities
+    npm audit fix  # fix any security vulnerabilities
     npm run serve
-
     ```
 
 4. **The app will run at [http://localhost:8080/](http://localhost:8080/)**
