@@ -12,25 +12,22 @@
     git clone https://github.com/helloworld0606/interviewProjects.git
     ```
 
-2. **Install dependencies**
+2. **Run the backend server**
     ```bash
-    cd interviewProjects
+    cd interviewProjects/backend
     npm install
-    ```
-
-3. **Run the backend server**
-    ```bash
-    cd backend
     node server.js
     ```
 
-4. **Run the frontend server** (open another cmd)
+3. **Run the frontend server** (open another cmd)
     ```bash
-    cd frontend
+    cd interviewProjects/frontend
+    npm install
     npm run serve
+
     ```
 
-5. **The app will run at [http://localhost:8080/](http://localhost:8080/)**
+4. **The app will run at [http://localhost:8080/](http://localhost:8080/)**
 
 
 
