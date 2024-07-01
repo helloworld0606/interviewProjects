@@ -1,4 +1,6 @@
 const bcrypt = require('bcryptjs');
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
 const { readData, writeData } = require('../utils/fileUtils');
 
 const getUsers = (req, res) => {
@@ -36,19 +38,79 @@ const loginUser = async (req, res) => {
   try {
     const isMatch = await bcrypt.compare(password, user.password);
     if (isMatch) {
-      res.status(200).json({ message: 'Login successful', userId: user.id });
+      
+      const secret = speakeasy.generateSecret();
+      user.twoFactorSecret = secret.base32;
+      writeData(data);
+
+      const otpAuthUrl = speakeasy.otpauthURL({
+        secret: secret.base32,
+        label: `MyApp (${user.account})`,
+        issuer: 'MyApp'
+      });
+
+      qrcode.toDataURL(otpAuthUrl, (err, data_url) => {
+        if (err) {
+          return res.status(500).json({ error: 'Failed to generate QR code' });
+        }
+        console.log('Generated QR Code URL:', data_url); 
+        return res.status(200).json({
+          message: '2FA required',
+          userId: user.id,
+          qrCodeUrl: data_url,
+          otpAuthUrl: otpAuthUrl 
+        });
+      });
     } else {
-      res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
   } catch (err) {
     console.error('Error comparing password:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
+};
+
+const verifyOtp = (req, res) => {
+  const data = readData();
+  const { userId, otp } = req.body;
+  const user = data.users.find(user => user.id === userId);
+
+  if (!user) {
+    return res.status(400).json({ error: 'User not found' });
+  }
+
+  const verified = speakeasy.totp.verify({
+    secret: user.twoFactorSecret,
+    encoding: 'base32',
+    token: otp
+  });
+
+  if (verified) {
+    return res.status(200).json({ message: 'OTP verification successful' });
+  } else {
+    return res.status(400).json({ error: 'Invalid OTP' });
+  }
+};
+
+const guestLogin = (req, res) => {
+  const data = readData();
+  const guestUser = data.users.find(user => user.isGuest);
+
+  if (!guestUser) {
+    return res.status(400).json({ error: 'No guest user available' });
+  }
+
+  const otp = speakeasy.totp({
+    secret: guestUser.twoFactorSecret,
+    encoding: 'base32'
+  });
+
+  return res.status(200).json({ otp });
 };
 
 const addGoogleUser = async (req, res) => {
   const data = readData();
-  const { account, password, uid } = req.body;
+  const { account, uid } = req.body;
 
   const userExists = data.users.some(user => user.account === account);
   if (userExists) {
@@ -56,15 +118,40 @@ const addGoogleUser = async (req, res) => {
   }
 
   try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const secret = speakeasy.generateSecret();
+    const newUser = {
+      id: uid,
+      account,
+      password: '', 
+      isGuest: false,
+      twoFactorSecret: secret.base32
+    };
 
-    data.users.push({ id: uid, account, password: hashedPassword });
+    data.users.push(newUser);
     writeData(data);
-    res.status(201).json({ message: 'Google user added successfully', userId: uid });
+
+    const otpAuthUrl = speakeasy.otpauthURL({
+      secret: secret.base32,
+      label: `MyApp (${account})`,
+      issuer: 'MyApp'
+    });
+
+    qrcode.toDataURL(otpAuthUrl, (err, data_url) => {
+      if (err) {
+        console.error('Failed to generate QR code:', err); 
+        return res.status(500).json({ error: 'Failed to generate QR code' });
+      }
+      console.log('Generated QR Code URL:', data_url); 
+      return res.status(201).json({
+        message: 'Google user added successfully',
+        userId: uid,
+        qrCodeUrl: data_url,
+        otpAuthUrl: otpAuthUrl 
+      });
+    });
   } catch (err) {
-    console.error('Error saving Google user:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error saving Google user:', err); 
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -72,5 +159,7 @@ module.exports = {
   getUsers,
   addUser,
   loginUser,
+  verifyOtp,
+  guestLogin,
   addGoogleUser
 };

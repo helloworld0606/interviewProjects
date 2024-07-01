@@ -14,6 +14,19 @@
       <button type="button" @click="loginWithGoogle">Google Account</button>
       <p v-if="error" class="error">{{ error }}</p>
     </form>
+    <div v-if="showOtpVerification">
+      <form @submit.prevent="verifyOtp">
+        <div>
+          <label for="otp">OTP:</label>
+          <input type="text" v-model="otp" required />
+        </div>
+        <button type="submit">Verify OTP</button>
+      </form>
+      <div v-if="qrCodeUrl">
+        <img :src="qrCodeUrl" alt="QR Code">
+        <p>{{ otpAuthUrl }}</p> 
+      </div>
+    </div>
   </div>
 </template>
 
@@ -26,7 +39,12 @@ export default {
     return {
       account: "",
       password: "",
+      otp: "",
       error: null,
+      showOtpVerification: false,
+      userId: null,
+      qrCodeUrl: null,
+      otpAuthUrl: null,
     };
   },
   methods: {
@@ -49,13 +67,38 @@ export default {
         const data = await response.json();
         console.log('Login successful:', data);
 
-        sessionStorage.setItem('isLoggedIn', 'true');
-        sessionStorage.setItem('userId', data.userId);
-
-        const redirectPath = this.$route.query.redirect || '/';
-        this.$router.push(`${redirectPath}?id=${data.userId}`);
+        if (data.qrCodeUrl) {
+          this.qrCodeUrl = data.qrCodeUrl;
+          this.otpAuthUrl = data.otpAuthUrl; 
+          this.userId = data.userId;
+          this.showOtpVerification = true;
+        } else {
+          sessionStorage.setItem('isLoggedIn', 'true');
+          sessionStorage.setItem('userId', data.userId);
+          const redirectPath = this.$route.query.redirect || '/';
+          this.$router.push(`${redirectPath}?id=${data.userId}`);
+        }
       } catch (err) {
         this.error = `Login failed: ${err.message}`;
+      }
+    },
+    async verifyOtp() {
+      this.error = null;
+      try {
+        const response = await fetch("http://localhost:3000/users/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: this.userId, otp: this.otp }),
+        });
+
+        if (!response.ok) throw new Error("OTP verification failed");
+
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('userId', this.userId);
+        const redirectPath = this.$route.query.redirect || '/';
+        this.$router.push(`${redirectPath}?id=${this.userId}`);
+      } catch (err) {
+        this.error = `OTP verification failed: ${err.message}`;
       }
     },
     async loginWithGoogle() {
@@ -64,11 +107,34 @@ export default {
         const result = await signInWithPopup(auth, googleProvider);
         console.log('Google login successful:', result.user);
 
-        sessionStorage.setItem('isLoggedIn', 'true');
-        sessionStorage.setItem('userId', result.user.uid);
+        const response = await fetch("http://localhost:3000/users/addGoogleUser", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ account: result.user.email, uid: result.user.uid }),
+        });
 
-        const redirectPath = this.$route.query.redirect || '/';
-        this.$router.push(`${redirectPath}?id=${result.user.uid}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error data:', errorData); // 调试信息
+          throw new Error(errorData.error || 'Google login failed');
+        }
+
+        const data = await response.json();
+        console.log('Google user added:', data);
+
+        if (data.qrCodeUrl) {
+          this.qrCodeUrl = data.qrCodeUrl;
+          this.otpAuthUrl = data.otpAuthUrl; 
+          this.userId = data.userId;
+          this.showOtpVerification = true;
+        } else {
+          sessionStorage.setItem('isLoggedIn', 'true');
+          sessionStorage.setItem('userId', data.userId);
+          const redirectPath = this.$route.query.redirect || '/';
+          this.$router.push(`${redirectPath}?id=${data.userId}`);
+        }
       } catch (err) {
         this.error = `Google login failed: ${err.message}`;
       }
@@ -76,7 +142,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .login {

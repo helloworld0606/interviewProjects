@@ -4,8 +4,15 @@
       "id": 1,
       "name": "Alice",
       "account": "alice123@gmail.com",
-      "password": "$2a$10$5rBhaE7dL.JZ/spo/U2iAuVEB5zpQX2V/nj/8.qeDpGDrjHcP3Coa",  
-      "_comment": "Password is 'ABC123456'"
+      "password": "$2a$10$5rBhaE7dL.JZ/spo/U2iAuVEB5zpQX2V/nj/8.qeDpGDrjHcP3Coa",
+      "_comment": "Password is 'ABC123456'",
+      "twoFactorSecret": "JVHF4Z2KGFXWE5DELIYTGXTOHFDGCSTMPBDUKSDTNN3UOJT3NBTA"
+    },
+    {
+      "id": 2,
+      "name": "James",
+      "account": "james123@gmail.com",
+      "password": "$2a$10$8s9h/HMj9uDvTa3xd4mWfelSKvy1MLgs68yPqruhLNHFsyaPQ0LBS"
     }
   ]
 }

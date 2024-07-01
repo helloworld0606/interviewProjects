@@ -1,0 +1,10 @@
+{
+    "guest": {
+      "id": "guest",
+      "account": "guest",
+      "password": "",
+      "isGuest": true,
+      "twoFactorSecret": "BASE32SECRET"
+    }
+  }
+  
